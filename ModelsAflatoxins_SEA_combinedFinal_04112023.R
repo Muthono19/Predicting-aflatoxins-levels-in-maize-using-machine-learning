@@ -33,7 +33,7 @@ library(ggdist)
 library(ggthemes)
 
 #### set working directory #####
-setwd("C:/Users/gstel/OneDrive/Desktop/IITA/Repeated analysis 03112023")
+setwd("~/South Eastern Africa Aflatoxins")
 
 #### Load the two dataset; at farm level and lowest admin level
 #### Original XY
@@ -141,14 +141,14 @@ varvsurf.grid.gap$varselect.thres
 
 ##### Define the formulas
 fm.farm.temp <- aflalog ~ Longitudes+soiltemp+Latitudes+mintempTERRA+dem+pdsi+precTERRA+maxtempTERRA+vpd+orgcarb+
-  evi+soilbulk+ndvi+sand+clay+CEC+PH+silt+Treat 
+  evi+soilbulk+ndvi+sand+clay+CEC+PH+silt
 fm.farm.gap <- aflalog ~ soiltemp+Longitudes+Latitudes+mintempCHELSA+maxtempCHELSA+pdsi+precCHELSA+dem+humidity+orgcarb+
-  ndvi+evi+CEC+sand+soilbulk+PH+clay+Treat+silt
+  ndvi+evi+CEC+sand+soilbulk+PH+clay+silt
 
 fm.grid.temp <- aflalog ~ soiltemp+Longitudes+dem+pdsi+Latitudes+precTERRA+mintempTERRA+vpd+maxtempTERRA+soilbulk+orgcarb+
-  ndvi+silt+sand+evi+Treat+clay+PH+CEC
+  ndvi+silt+sand+evi+clay+PH+CEC
 fm.grid.gap <- aflalog ~ Latitudes+maxtempCHELSA+pdsi+soiltemp+Longitudes+mintempCHELSA+dem+precCHELSA+humidity+orgcarb+
-  soilbulk+ndvi+sand+evi+Treat+clay+CEC+silt+PH 
+  soilbulk+ndvi+sand+evi+clay+CEC+silt+PH 
 
 ### create space-time folds for cross validation
 set.seed(10)
@@ -265,10 +265,10 @@ impplt.grid.gap <-ggplot(imp.grid.gap2, aes(x=reorder(varnames, Overall), y=Over
 png(file = "VarImp_all.png", width = 14000, height = 7500, units = "px", res = 750, type = "cairo")
 grid.arrange(impplt.farm.temp,impplt.farm.gap,impplt.grid.temp,impplt.grid.temp,ncol=4)
 dev.off()
-?partial
+
 #####Partial plots
 library(pdp)
-all.farm.temp = topPredictors(model.farm.temp,n=3)
+all.farm.temp = topPredictors(model.farm.temp,n=6)
 pd.farm.temp <- NULL
 for (i in all.farm.temp) {
   tmp <- partial(model.farm.temp, pred.var = i, data = d.farm.temp)
@@ -276,10 +276,10 @@ for (i in all.farm.temp) {
   pd.farm.temp <- rbind(pd.farm.temp, cbind(tmp, predictor = i))
 }
 pd.farm.temp$predictor <- factor(pd.farm.temp$predictor, levels = unique(pd.farm.temp$predictor))
-pp.farm.temp <- ggplot(pd.farm.temp, aes(x, y)) + geom_line(linewidth=1) + theme_tq() +theme(text = element_text(size = 25, face="bold",
+pp.farm.temp <- ggplot(pd.farm.temp, aes(x, y)) + geom_line(linewidth=1) + theme_classic() +theme(text = element_text(size = 25, face="bold",
           color = "black"),axis.text.y = element_text(size=18, face="bold",color = "black"),
           plot.title = element_text(hjust = 0.5,color="red"),axis.text = element_text(size = 18,color = "black"))+
-  ggtitle("D1 farm")+ ylab("Aflatoxintoxins (ppb)") +xlab("") + facet_wrap(~ predictor, scales = "free")
+  ggtitle("D1 farm")+ ylab("log(aflatoxins+1)") +xlab("") + facet_wrap(~ predictor, scales = "free")
 
 ### with gap filled variables
 all.farm.gap = topPredictors(model.farm.gap,n=6)
@@ -290,41 +290,140 @@ for (i in all.farm.gap) {
   pd.farm.gap <- rbind(pd.farm.gap, cbind(tmp, predictor = i))
 }
 pd.farm.gap$predictor <- factor(pd.farm.gap$predictor, levels = unique(pd.farm.gap$predictor))
-pp.farm.gap <- ggplot(pd.farm.gap, aes(x, y)) + geom_line(linewidth=1) + theme_tq() +theme(text = element_text(size = 25, face="bold",
-                    color = "black"),axis.text.y = element_text(size=18, face="bold",color = "black"),
-                    plot.title = element_text(hjust = 0.5,color="red"),axis.text = element_text(size = 18,color = "black"))+
-  ggtitle("D2")+ ylab("Aflatoxintoxins (ppb)") +xlab("") + facet_wrap(~ predictor, scales = "free")
+pp.farm.gap <- ggplot(pd.farm.gap, aes(x, y)) + geom_line(linewidth=1) + theme_classic() +
+  theme(text = element_text(size = 25, face="bold",color = "black"),axis.text.y = element_text(size=18, face="bold",color = "black"),
+  plot.title = element_text(hjust = 0.5,color="red"),axis.text = element_text(size = 18,color = "black"))+
+  ggtitle("D2 farm")+ ylab("log(aflatoxins+1)") +xlab("") + facet_wrap(~ predictor, scales = "free")
 
-### with admin level variables
-all.admin.temp = topPredictors(model.admin.temp,n=6)
-pd.admin.temp <- NULL
-for (i in all.admin.temp) {
-  tmp <- partial(model.admin.temp, pred.var = i)
+all.grid.temp = topPredictors(model.grid.temp,n=6)
+pd.grid.temp <- NULL
+for (i in all.grid.temp) {
+  tmp <- partial(model.grid.temp, pred.var = i, data = d.grid.temp)
   names(tmp) <- c("x", "y")
-  pd.admin.temp <- rbind(pd.admin.temp, cbind(tmp, predictor = i))
+  pd.grid.temp <- rbind(pd.grid.temp, cbind(tmp, predictor = i))
 }
-pd.admin.temp$predictor <- factor(pd.admin.temp$predictor, levels = unique(pd.admin.temp$predictor))
-pp.admin.temp <- ggplot(pd.admin.temp, aes(x, y)) + geom_line(linewidth=1) + theme_tq() +theme(text = element_text(size = 25, face="bold",
-                          color = "black"),axis.text.y = element_text(size=18, face="bold",color = "black"),
-                    plot.title = element_text(hjust = 0.5,color="red"),axis.text = element_text(size = 18,color = "black"))+
-  ggtitle("D3")+ ylab("Aflatoxintoxins (ppb)") +xlab("") + facet_wrap(~ predictor, scales = "free")
+pd.grid.temp$predictor <- factor(pd.grid.temp$predictor, levels = unique(pd.grid.temp$predictor))
+pp.grid.temp <- ggplot(pd.grid.temp, aes(x, y)) + geom_line(linewidth=1) +
+  theme_classic() +theme(text = element_text(size = 25, face="bold",
+  color = "black"),axis.text.y = element_text(size=18, face="bold",color = "black"),
+plot.title = element_text(hjust = 0.5,color="red"),axis.text = element_text(size = 18,color = "black"))+
+  ggtitle("D1 10km")+ ylab("log(aflatoxins+1)") +xlab("") + facet_wrap(~ predictor, scales = "free")
 
-png(file = "partialplots_all.png", width = 8000, height =10000, units = "px", res = 650, type = "cairo")
-grid.arrange(pp.farm.temp,pp.farm.gap,pp.admin.temp,nrow=3)
+### with gap filled variables
+all.grid.gap = topPredictors(model.grid.gap,n=6)
+pd.grid.gap <- NULL
+for (i in all.grid.gap) {
+  tmp <- partial(model.grid.gap, pred.var = i)
+  names(tmp) <- c("x", "y")
+  pd.grid.gap <- rbind(pd.grid.gap, cbind(tmp, predictor = i))
+}
+pd.grid.gap$predictor <- factor(pd.grid.gap$predictor, levels = unique(pd.grid.gap$predictor))
+pp.grid.gap <- ggplot(pd.grid.gap, aes(x, y)) + geom_line(linewidth=1) + theme_classic() +
+  theme(text = element_text(size = 25, face="bold",
+  color = "black"),axis.text.y = element_text(size=18, face="bold",color = "black"),
+  plot.title = element_text(hjust = 0.5,color="red"),axis.text = element_text(size = 18,color = "black"))+
+  ggtitle("D2 10km")+ ylab("log(aflatoxins+1)") +xlab("") + facet_wrap(~ predictor, scales = "free")
+
+png(file = "partialplots_all.png", width = 14000, height =10000, units = "px", res = 600, type = "cairo")
+grid.arrange(pp.farm.temp,pp.farm.gap,pp.grid.temp,pp.grid.gap,nrow=2, ncol=2)
 dev.off()
 
 #### Spatial predictions
-cropmask <-  rast("finalcropmask2.tif")
+### with Wet year 2020
+farm.temp.ras20 <- stack("Longitudes.tif","stemp2020.tif","Latitudes.tif","mintemp2020.tif","dem.tif","pdsi2020.tif",
+"prec2020.tif","maxtemp2020.tif","vpd2020.tif","orgcarb.tif","evi2020.tif","soilbulk.tif","ndvi2020.tif",
+"sand.tif","clay.tif","CEC.tif","PH.tif","silt.tif")
+names(farm.temp.ras20)<- c("Longitudes","soiltemp","Latitudes","mintempTERRA","dem","pdsi","precTERRA","maxtempTERRA","vpd",
+"orgcarb","evi","soilbulk","ndvi","sand","clay","CEC","PH","silt")
 
-### with temporal matching variables
-farm.temp.ras <- stack("mintempTERRA.tif","long.tif","pdsi.tif","lat.tif","dem.tif","soiltemp.tif","maxtempTERRA.tif",
-"vpd.tif","sand.tif","soilbulk.tif","orgcarb.tif","precTERRA.tif","evi.tif","clay.tif","ndvi.tif","PH.tif","silt.tif","CEC.tif")
-farm.temp.rast <- rast(farm.temp.ras)
+farm.temp.rast20 <- rast(farm.temp.ras20)
 gc()
-pred.farm.temp <- predict(farm.temp.rast,model.farm.temp,na.rm=T)
-pred.farm.temp.crp <- mask(pred.farm.temp,cropmask)
-plot(pred.farm.temp.crp)
-writeRaster(pred.farm.temp.crp,"prediction_Farm_Temp.tif")
+pred.farm.temp20 <- predict(farm.temp.rast20,model.farm.temp,na.rm=T)
+#pred.farm.temp2 <- exp(pred.farm.temp) - 1
+plot(pred.farm.temp20)
+#aoa.farm.temp <- aoa(farm.temp.rast, model.farm.temp, useWeight = TRUE)
+#plot(aoa.farm.temp$AOA)#, col=c("grey","transparent"), add=T)
+writeRaster(pred.farm.temp20,"prediction_Farm_Temp_Wet.tif")
+
+### with dry year 2021
+farm.temp.ras21 <- stack("Longitudes.tif","stemp2021.tif","Latitudes.tif","mintemp2021.tif","dem.tif","pdsi2021.tif",
+                         "prec2021.tif","maxtemp2021.tif","vpd2021.tif","orgcarb.tif","evi2021.tif","soilbulk.tif","ndvi2020.tif",
+                         "sand.tif","clay.tif","CEC.tif","PH.tif","silt.tif")
+names(farm.temp.ras21)<- c("Longitudes","soiltemp","Latitudes","mintempTERRA","dem","pdsi","precTERRA","maxtempTERRA","vpd",
+                           "orgcarb","evi","soilbulk","ndvi","sand","clay","CEC","PH","silt")
+
+farm.temp.rast21 <- rast(farm.temp.ras21)
+gc()
+pred.farm.temp21 <- predict(farm.temp.rast21,model.farm.temp,na.rm=T)
+#pred.farm.temp2 <- exp(pred.farm.temp) - 1
+plot(pred.farm.temp21)
+#aoa.farm.temp <- aoa(farm.temp.rast, model.farm.temp, useWeight = TRUE)
+#plot(aoa.farm.temp$AOA)#, col=c("grey","transparent"), add=T)
+writeRaster(pred.farm.temp21,"prediction_Farm_Temp_Dry.tif",overwrite=TRUE)
+
+###wet year future projections
+farm.temp.ras20F <- stack("Longitudes.tif","stemp2020.tif","Latitudes.tif","mintemp70.tif","dem.tif","pdsi2020.tif",
+                         "prec70.tif","maxtemp70.tif","vpd2020.tif","orgcarb.tif","evi2020.tif","soilbulk.tif","ndvi2020.tif",
+                         "sand.tif","clay.tif","CEC.tif","PH.tif","silt.tif")
+names(farm.temp.ras20F)<- c("Longitudes","soiltemp","Latitudes","mintempTERRA","dem","pdsi","precTERRA","maxtempTERRA","vpd",
+                           "orgcarb","evi","soilbulk","ndvi","sand","clay","CEC","PH","silt")
+
+farm.temp.rast20F <- rast(farm.temp.ras20F)
+gc()
+pred.farm.temp20F <- predict(farm.temp.rast20F,model.farm.temp,na.rm=T)
+#pred.farm.temp2 <- exp(pred.farm.temp) - 1
+plot(pred.farm.temp20F)
+#aoa.farm.temp <- aoa(farm.temp.rast, model.farm.temp, useWeight = TRUE)
+#plot(aoa.farm.temp$AOA)#, col=c("grey","transparent"), add=T)
+writeRaster(pred.farm.temp20F,"prediction_Farm_Temp_WetF.tif")
+
+### with dry year 2021 future projections
+farm.temp.ras21F <- stack("Longitudes.tif","stemp2021.tif","Latitudes.tif","mintemp70.tif","dem.tif","pdsi2021.tif",
+                         "prec70.tif","maxtemp70.tif","vpd2021.tif","orgcarb.tif","evi2021.tif","soilbulk.tif","ndvi2020.tif",
+                         "sand.tif","clay.tif","CEC.tif","PH.tif","silt.tif")
+names(farm.temp.ras21F)<- c("Longitudes","soiltemp","Latitudes","mintempTERRA","dem","pdsi","precTERRA","maxtempTERRA","vpd",
+                           "orgcarb","evi","soilbulk","ndvi","sand","clay","CEC","PH","silt")
+
+farm.temp.rast21F <- rast(farm.temp.ras21F)
+gc()
+pred.farm.temp21F <- predict(farm.temp.rast21F,model.farm.temp,na.rm=T)
+#pred.farm.temp2 <- exp(pred.farm.temp) - 1
+plot(pred.farm.temp21F)
+#aoa.farm.temp <- aoa(farm.temp.rast, model.farm.temp, useWeight = TRUE)
+#plot(aoa.farm.temp$AOA)#, col=c("grey","transparent"), add=T)
+writeRaster(pred.farm.temp21F,"prediction_Farm_Temp_DryF.tif",overwrite=TRUE)
+
+#### lEVELPLOTS FOR TH PREDICTIONS
+### Load the national boundaries
+aoi <- readOGR("AOI_BoundariesPRJ.shp")
+
+## Load the predicted rasters
+afla.pred <- stack("prediction_Farm_Temp_Dry.tif","prediction_Farm_Temp_DryF.tif",
+                   "prediction_Farm_Temp_Wet.tif","prediction_Farm_Temp_WetF.tif")
+afla.pred2 <- exp(afla.pred)-1
+
+plot(afla.pred2)
+names(afla.pred) <- c("","","","")
+
+allnames <- c("Driest 2021","Driest 2070","Wettest 2020","Wettest 2070")
+library(RColorBrewer)
+
+myInverseColors <- rev(brewer.pal(11, "RdYlGn"))
+
+myTheme=rasterTheme(region=myInverseColors)
+
+png(file = "predictionsAll.png", width = 4500, height = 4500, units = "px", res = 600, type = "cairo")
+levelplot(afla.pred2,par.settings=myTheme, names.attr=allnames, layout=c(2,2), margin=FALSE,ylab="",
+          panel=function(...) {
+            panel.levelplot(...)
+            sp.polygons(aoi, fill = NA, col = "black", lwd=0.3)
+          })
+dev.off()
+
+
+
+
+
 
 ### with gap filled variables
 farm.gap.ras <- stack("maxtempCHELSA.tif","long.tif","pdsi.tif","lat.tif","humidity.tif","mintempCHELSA.tif","soiltemp.tif",
